@@ -43,7 +43,7 @@ def main(): # メイン
     scn_height = 768
     
     screen = pygame.display.set_mode((scn_width, scn_height))
-    scr =pygame.Surface((scn_width,scn_height),flags=pygame.SRCALPHA)
+    scn =pygame.Surface((scn_width,scn_height),flags=pygame.SRCALPHA)
     
     #フォントの用意
     font1 = pygame.font.SysFont('meiryo', 40)   
@@ -55,8 +55,8 @@ def main(): # メイン
     pheight = 768      #画像表示サイズの変更
 
     counter = 0 
-    pattern_MAX = 24
-    player_pos = 2    #
+    pattern_MAX = 23
+    
     char_ptn = [0,1,1,1,1,2,3,3,3,4,4,4,4,5,6,6,6,7,7,8,9,9,10,11,11]
     char_ang = [0,0,30,20,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0]
     char_pos_x=[0,350,345,350,360,380,395,405,415,425,440,455,460,480,
@@ -64,18 +64,95 @@ def main(): # メイン
     char_pos_y=[0,270,295,330,365,410,370,335,300,270,305,340,375,410,
                 375,340,305,340,375,410,375,340,375,370,0,0]
 
-    
-    while True: 
-        screen.blit(img_scn_bg0,[0,0])
-#       screen.blit(img_bg[0], [0,0])
+    p_pos_x=[330,435,540]
+    p_pos_y=[400,400,400]    
+    p_pos = 1    #ゲーム開始時のプレイヤーの位置
+    b_key=None
 
-        i = 0   
-        while i < pattern_MAX+1:
-            img = pygame.transform.rotozoom(img_bg[char_ptn[i]],char_ang[i],1.0)
-            screen.blit(img,[char_pos_x[i],char_pos_y[i]]) 
-            i += 1
+    game_mode = 1    #仮　0=time_screen_mode  1=game_modeA   2=game modeB 
 
+    score = 0
+    char_locate =[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0]   #最大22キャラ表示
+    char_locate =[0,0,0,0,1,0,1,0,1,0,0,0,1,0,0,0,0,0,1,0,0,0,0,0,0]   #最大22キャラ表示
+    cnt = 0
+    cnt_speed = 5
+    cnt_phase = 50
+    dead = 0       #charの落下フラグ　1=左　　2=中央　　3=右
+
+
+#メインルーチン
+
+    while True:
+        if game_mode == 0:
+
+            scn.fill((0,0,0,0)) 
+            screen.blit(img_scn_bg0,[0,0])
+
+            i = 0   
+            while i < pattern_MAX:
+                img = pygame.transform.rotozoom(img_bg[char_ptn[i]],char_ang[i],1.0)
+                screen.blit(img,[char_pos_x[i],char_pos_y[i]]) 
+                i += 1
+            
         
+        if game_mode == 1:
+        
+            scn.fill((0,0,0,0)) 
+            screen.blit(img_scn_bg0,[0,0])
+#           screen.blit(img_bg[0], [0,0])
+
+            #for debug            
+            text1 = font1.render("SCORE:"+str(score) + ":"+ str(cnt) +":"+ str(cnt_speed)+":"+ str(cnt_phase),
+                     True, (0,0,0))
+            screen.blit(text1, (0,0))
+
+
+            #キャラクタの生成・移動
+            cnt = cnt + 1
+            if dead == 0 and cnt%cnt_speed == 0 :           #charの移動スピード
+
+                text1 = font1.render("●",True, (0,0,0))
+                screen.blit(text1, (0,50)) 
+            
+                if cnt%cnt_phase == 0 :  #新規キャラクターの生成
+                    screen.blit(text1, (0,100)) 
+                    char_locate[0] = 1                
+ 
+  
+ 
+                i= pattern_MAX
+                while i >= 0 :
+                    if char_locate[i] == 1:
+                        char_locate[i] = 0
+                        
+                        if i == pattern_MAX: 
+                            score += 1    
+                            screen.blit(text1, (0,150)) 
+                        else:
+                            char_locate[i+1] = 1
+                    i -= 1
+                    
+            i = 0   
+            while i < pattern_MAX+1:
+                if char_locate[i] == 1:
+                    img = pygame.transform.rotozoom(img_bg[char_ptn[i]],char_ang[i],1.0)
+                    screen.blit(img,[char_pos_x[i],char_pos_y[i]]) 
+                i += 1
+
+            scn.blit(img_bg[20],[p_pos_x[p_pos],p_pos_y[p_pos]])  #print_player
+                    # 半透明のfillが有効
+                    #scn.fill((255,255,255,10))
+                    # ベースのsurfaceに貼り付け
+            screen.blit(scn,(0,0)) 
+
+            key = pygame.key.get_pressed()
+            if b_key != key :
+                b_key = key
+                if key[pygame.K_1] == 1 and p_pos > 0:
+                    p_pos -= 1
+                if key[pygame.K_3] == 1 and p_pos < 2:
+                    p_pos += 1
+
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 pygame.quit()
@@ -90,7 +167,7 @@ def main(): # メイン
                     sys.exit()
                     
         pygame.display.update()
-        clock.tick(24)
+        clock.tick(30)
 
 if __name__ == '__main__':
     main()
