@@ -66,33 +66,34 @@ def main(): # メイン
     p_pos_y=[400,400,400]    
     #出現パターン
     ap_ptn = [
-        00000000000000000000000000000000,
-        00000000000000000000000000000000,
-        00000000000000000000000000000000,
-        00000000000000000000000000000000,
-        00000000000000000000000000000000,
-        00000000000000000000000000000000,
-        00000000000000000000000000000000,
-        00000000000000000000000000000000,
-        00000000000000000000000000000000,
-        00000000000000000000000000000000,
+        "10000000100000001000000010000000",
+        "01000001000000001000000100000000",
+   #     "01000000000000000000000000000000",
+   #     "00000000000000000000000000000000",
+   #     "00000000000000000000000000000000",
+   #     "00000000000000000000000000000000",
+   #     "00000000000000000000000000000000",
+   #     "00000000000000000000000000000000",
+   #     "00000000000000000000000000000000",
+   #     "00000000000000000000000000000000",
+        "EEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEE"
         ]
 
     p_pos = 1    #ゲーム開始時のプレイヤーの位置
     b_key=None
 
     game_mode = 1    #仮　0=time_screen_mode  1=game_modeA   2=game modeB 
-
     score = 0
-    char_locate =[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0]   #最大22キャラ表示
-    char_locate =[0,0,0,0,1,0,1,0,1,0,0,0,1,0,0,0,0,0,1,0,0,0,0,0,0]   #最大22キャラ表示
+    char_locate = [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0]
+    pt_cnt = 0
     cnt = 0
-    cnt_speed = 5
-    cnt_phase = 50
-    dead = 0       #charの落下フラグ　1=左　　2=中央　　3=右
+    ptn_cnt = 0
+    cnt_speed = 10
+    char_safe = [0,0,0]   
+    char_dead = [0,0,0]       #charの落下フラグ　0=落下なし　1=rakka 
 
 
-#メインルーチン
+    #メインルーチン
 
     while True:
         if game_mode == 0:
@@ -105,33 +106,58 @@ def main(): # メイン
                 img = pygame.transform.rotozoom(img_bg[char_ptn[i]],char_ang[i],1.0)
                 screen.blit(img,[char_pos_x[i],char_pos_y[i]]) 
                 i += 1
+           
+            key = pygame.key.get_pressed()
+            #title -> game_start
+            if key[pygame.K_0] == 1 :
+               game_mode =1
+               score = 0
+               char_locate = [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0]
+               pt_cnt = 0
+               cnt = 0
+               ptn_cnt = 0
+               cnt_speed = 5
+               char_safe = [0,0,0]   
+               char_dead = [0,0,0]       #charの落下フラグ　0=落下なし　1=rakka               
             
-        
-        if game_mode == 1:
+        #ゲームモード通常
+        if game_mode == 1:              
         
             scn.fill((0,0,0,0)) 
             screen.blit(img_scn_bg0,[0,0])
 #           screen.blit(img_bg[0], [0,0])
 
             #for debug            
-            text1 = font1.render("SCORE:"+str(score) + ":"+ str(cnt) +":"+ str(cnt_speed)+":"+ str(cnt_phase),
+            text1 = font1.render("SCORE:"+str(score) + ":"+ str(cnt) +":"+ str(cnt_speed),
                      True, (0,0,0))
             screen.blit(text1, (0,0))
 
 
+
             #キャラクタの生成・移動
             cnt = cnt + 1
-            if dead == 0 and cnt%cnt_speed == 0 :           #charの移動スピード
+            if cnt%cnt_speed == 0 :           #charの移動スピード
 
-                text1 = font1.render("●",True, (0,0,0))
+                text1 = font1.render("●",True, (0,0,0))     #for debug
                 screen.blit(text1, (0,50)) 
             
-                if cnt%cnt_phase == 0 :  #新規キャラクターの生成
-                    screen.blit(text1, (0,100)) 
+                ptn = ap_ptn[cnt//cnt_speed//32]
+                pt_cnt = (pt_cnt +1)%32 
+                                  
+                if ptn[pt_cnt] == "1":
+#                if cnt%cnt_phase == 0 :  #新規キャラクターの生成
+
                     char_locate[0] = 1                
- 
+                
+                    text1 = font1.render("●",True, (255,0,0))     #for debug
+                    screen.blit(text1, (0,200)) 
+                    
+                if ptn[pt_cnt] == "E":
+                    game_mode = 0
+                    cnt = 0
+                    
   
- 
+                #キャラクターの移動
                 i= pattern_MAX
                 while i >= 0 :
                     if char_locate[i] == 1:
@@ -139,31 +165,65 @@ def main(): # メイン
                         
                         if i == pattern_MAX: 
                             score += 1    
-                            screen.blit(text1, (0,150)) 
+                            screen.blit(text1, (0,300)) 
+                    
+                        elif i==5 and char_safe[0] ==0 :
+                            char_dead[0]=1
+                            game_mode = 2
+                        elif i==13 and char_safe[1] ==0 :
+                            char_dead[1]=1
+                            game_mode = 2
+                        elif i==19 and char_safe[2] ==0 :
+                            char_dead[2]=1
+                            game_mode = 2    
+                            
                         else:
                             char_locate[i+1] = 1
-                    i -= 1
+                            
                     
-            i = 0   
-            while i < pattern_MAX+1:
-                if char_locate[i] == 1:
-                    img = pygame.transform.rotozoom(img_bg[char_ptn[i]],char_ang[i],1.0)
-                    screen.blit(img,[char_pos_x[i],char_pos_y[i]]) 
-                i += 1
+                    i -= 1
+                char_safe = [0,0,0]  
 
-            scn.blit(img_bg[20],[p_pos_x[p_pos],p_pos_y[p_pos]])  #print_player
+        #キャラクターの表示        
+        i = 0   
+        while i < pattern_MAX+1:
+            if char_locate[i] == 1:
+                img = pygame.transform.rotozoom(img_bg[char_ptn[i]],char_ang[i],1.0)
+                screen.blit(img,[char_pos_x[i],char_pos_y[i]]) 
+            i += 1
+
+                    
+        #ゲームモード(char dead)
+        if game_mode == 2:
+            
+             game_mode = 1       
+
+
+        scn.blit(img_bg[20],[p_pos_x[p_pos],p_pos_y[p_pos]])  #print_player
                     # 半透明のfillが有効
                     #scn.fill((255,255,255,10))
                     # ベースのsurfaceに貼り付け
-            screen.blit(scn,(0,0)) 
+        screen.blit(scn,(0,0)) 
 
-            key = pygame.key.get_pressed()
-            if b_key != key :
-                b_key = key
-                if key[pygame.K_1] == 1 and p_pos > 0:
-                    p_pos -= 1
-                if key[pygame.K_3] == 1 and p_pos < 2:
-                    p_pos += 1
+        #自キャラの移動
+        key = pygame.key.get_pressed()
+        if b_key != key :
+            b_key = key
+            if key[pygame.K_1] == 1 and p_pos > 0:
+                p_pos -= 1
+            if key[pygame.K_3] == 1 and p_pos < 2:
+                p_pos += 1
+                
+        #自キャラの当たり判定
+        if p_pos == 0 and char_locate[5] == 1 and char_safe[0] == 0:
+            char_safe[0] = 1
+            #after pi sound add
+        elif p_pos == 1 and char_locate[13] == 1 and char_safe[1] == 0:
+            char_safe[1] = 1
+            #after pi sound add
+        elif p_pos == 2 and char_locate[19] == 1 and char_safe[2] == 0:
+            char_safe[2] = 1
+            #after pi sound add    
 
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
